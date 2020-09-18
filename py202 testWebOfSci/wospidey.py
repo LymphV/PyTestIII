@@ -24,7 +24,7 @@ class Wospidey:
         3.从检索结果中抽取文章的标题、作者、通讯作者、电子邮箱等字段
     '''
     
-    __version__ = 20200917
+    __version__ = 20200918
     __author__ = 'LymphV'
     
     def __init__ (this, ifHeadless = True, home = home):
@@ -44,6 +44,10 @@ class Wospidey:
         '''
         打开paper页时等待页面加载
         如果长时间打不开则视为被反爬系统禁止访问
+        
+        Raise
+        -----
+        Exception : paper页打不开报错
         '''
         for i in range(6):
             try:

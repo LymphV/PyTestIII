@@ -88,8 +88,8 @@ def selectSpan (dv, span = None):
     span : 起止时间对(startYear,endYear)，默认为None选择wos的所有年份
     
     Raise
-    ------
-    str : 当起止时间对wos非法时抛出错误
+    -----
+    AssertionError : 当起止时间对wos非法时抛出错误
     '''
     
     ###选择时间跨度下拉框

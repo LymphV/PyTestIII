@@ -20,5 +20,5 @@ import paperExtracter
 from wospidey import Wospidey
 from main import main
 
-__version__ = 20200917
+__version__ = 20200918
 __author__ = 'LymphV'
