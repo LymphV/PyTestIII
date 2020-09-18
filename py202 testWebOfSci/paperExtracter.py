@@ -26,7 +26,7 @@ def __cleanAuthor (txt):
 
 def extractValues (dv):
     '''
-    从paper页抽取title，authors，cauthors，email字段
+    从paper页抽取title，authors，cauthors，emails字段
     
     Parameters
     ----------
@@ -54,10 +54,10 @@ def extractValues (dv):
     title = dv.find_elements_by_class_name('title')
     authors = dv.find_elements_by_xpath(aPath)
     cauthors = dv.find_elements_by_xpath(cPath)
-    email = dv.find_elements_by_xpath(ePath)
+    emails = dv.find_elements_by_xpath(ePath)
     
     ###没有email为无效页面
-    if not email: return None
+    if not emails: return None
     
     ###通信作者正则
     caReg = r'[:：]\s*(.*)\s\(corresponding author\)'
@@ -66,5 +66,5 @@ def extractValues (dv):
     rst.title = '' if not title else title[0].text
     rst.authors = '' if not authors else __cleanAuthor(authors[0].text)
     rst.cauthors = '' if not cauthors else ';'.join(set(re.findall(caReg, cauthors[0].text)))
-    rst.email = email[0].text
+    rst.emails = ';'.join([email.text for email in emails])
     return rst

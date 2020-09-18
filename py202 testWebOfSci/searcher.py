@@ -118,26 +118,34 @@ def selectSpan (dv, span = None):
     ###点击时间跨度“自定义年份范围”
     dv.find_element_by_xpath(spanPath % SpanIndex.CTM).click()
     
-    if startYear is not None:
-        ###点击起始时间下拉框
-        dv.find_element_by_xpath(seyDdlPath % 'startYear').click()
-        ###选择起始时间输入框，并输入起始时间
-        inpStartYear = dv.find_element_by_xpath(seyIptPath)
-        inpStartYear.clear()
-        inpStartYear.send_keys(str(startYear))
-        ###非法起始时间
-        assert not dv.find_elements_by_xpath(errorPath), 'invalid start year'
-        inpStartYear.send_keys(Keys.ENTER)
+    ###点击起始时间下拉框
+    dv.find_element_by_xpath(seyDdlPath % 'startYear').click()
     
-    if endYear is not None:
-        ###点击终止时间输入框，并输入终止时间
-        dv.find_element_by_xpath(seyDdlPath % 'endYear').click()
-        inpStartYear = dv.find_element_by_xpath(seyIptPath)
-        inpStartYear.clear()
-        inpStartYear.send_keys(str(endYear))
-        ###非法终止时间
-        assert not dv.find_elements_by_xpath(errorPath), 'invalid end year'
-        inpStartYear.send_keys(Keys.ENTER)
+    ###wos提供的最早时间
+    if startYear is None:
+        startYear = int(dv.find_element_by_xpath(spanPath % 1).text.strip())
+    
+    ###选择起始时间输入框，并输入起始时间
+    inpStartYear = dv.find_element_by_xpath(seyIptPath)
+    inpStartYear.clear()
+    inpStartYear.send_keys(str(startYear))
+    ###非法起始时间
+    assert not dv.find_elements_by_xpath(errorPath), 'invalid start year'
+    inpStartYear.send_keys(Keys.ENTER)
+    
+    ###点击终止时间输入框，并输入终止时间
+    dv.find_element_by_xpath(seyDdlPath % 'endYear').click()
+        
+    ###wos提供的最晚时间
+    if endYear is None:
+        endYear = int(dv.find_element_by_xpath(spanPath % 1).text.strip())
+        
+    inpEndYear = dv.find_element_by_xpath(seyIptPath)
+    inpEndYear.clear()
+    inpEndYear.send_keys(str(endYear))
+    ###非法终止时间
+    assert not dv.find_elements_by_xpath(errorPath), 'invalid end year'
+    inpEndYear.send_keys(Keys.ENTER)
 
 
 

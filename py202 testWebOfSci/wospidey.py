@@ -8,6 +8,8 @@ wospidey
     3.从检索结果中抽取文章的标题、作者、通讯作者、电子邮箱等字段
     
 '''
+from time import time
+
 from cfg import home
 from driverOps import getDriver, newLabel, switchLabel, waitTillOpen
 from searcher import selectDatabase, selectSpan, search, ifSearchFailed
@@ -112,10 +114,16 @@ class Wospidey:
         print ('INFO : start to extract data')
         i = 0
         maxI = min(nReq, nRst, MAX_DOC)
+        
+        tStart = time()
+        ts = tc = 0
         for lnk in getLnks(driver, nReq, nRst):
             i += 1
-            print ('INFO : extracting %d/%d' % (i, maxI), end = '\r')
+            sTimeCost = ', %.2fs last page'
+            print ('INFO : extracting %d/%d%s' % (i, maxI,
+                    '' if i == 1 else sTimeCost % tc), end = '\r')
             
+            ts = time()
             newLabel(driver, lnk)
             switchLabel(driver, -1)
             
@@ -124,9 +132,11 @@ class Wospidey:
             rst = extractValues(driver)
             driver.close()
             switchLabel(driver,-1)
+            tc = time() - ts
             
             yield rst
-        print ('\nINFO : extracting done')
+        tCost = time() - tStart
+        print ('\nINFO : extracting done, %.2fs/paper' % (tCost / maxI))
     
     def close (this):
         '''
