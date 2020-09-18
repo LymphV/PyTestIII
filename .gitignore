@@ -126,3 +126,5 @@ dmypy.json
 *.csv
 *.txt
 *.zip
+
+py204 testWosSpi/*
