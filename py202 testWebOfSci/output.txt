@@ -1,0 +1,13 @@
+[
+"invalid paper",,
+{'title': 'The rise of graphene', 'authors': 'Geim, AK (Geim, A. K.); Novoselov, KS (Novoselov, K. S.)', 'cauthors': 'Geim, AK', 'email': 'geim@man.ac.uk'},
+"invalid paper",,
+{'title': 'GEANT4-a simulation toolkit', 'authors': 'Agostinelli, S (Agostinelli, S); Allison, J (Allison, J); Amako, K (Amako, K); Apostolakis, J (Apostolakis, J); Araujo, H (Araujo, H); Arce, P (Arce, P); Asai, M (Asai, M); Axen, D (Axen, D); Banerjee, S (Banerjee, S); Barrand, G (Barrand, G)', 'cauthors': 'Allison, J', 'email': 'john.allison@man.ac.uk'},
+{'title': 'Meta-analysis of observational studies in epidemiology - A proposal for reporting', 'authors': 'Stroup, DF (Stroup, DF); Berlin, JA (Berlin, JA); Morton, SC (Morton, SC); Olkin, I (Olkin, I); Williamson, GD (Williamson, GD); Rennie, D (Rennie, D); Moher, D (Moher, D); Becker, BJ (Becker, BJ); Sipe, TA (Sipe, TA); Thacker, SB (Thacker, SB)', 'cauthors': 'Stroup, DF', 'email': 'dfs2@cdc.gov'},
+"invalid paper",,
+"invalid paper",,
+"invalid paper",,
+{'title': 'Wireless sensor networks: a survey', 'authors': 'Akyildiz, IF (Akyildiz, IF); Su, W (Su, W); Sankarasubramaniam, Y (Sankarasubramaniam, Y); Cayirci, E (Cayirci, E)', 'cauthors': 'Su, W', 'email': 'ian@ece.gatech.edu'},
+{'title': 'New Algorithms and Methods to Estimate Maximum-Likelihood Phylogenies: Assessing the Performance of PhyML 3.0', 'authors': 'Guindon, S (Guindon, Stephane) ; Dufayard, JF (Dufayard, Jean-Francois) ; Lefort, V (Lefort, Vincent) ; Anisimova, M (Anisimova, Maria) ; Hordijk, W (Hordijk, Wim) ; Gascuel, O (Gascuel, Olivier)', 'cauthors': 'Gascuel, O', 'email': 'gascuel@lirmm.fr'},
+
+]
