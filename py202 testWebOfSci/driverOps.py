@@ -17,7 +17,10 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait as Wait
 from selenium.webdriver.support import expected_conditions as EC
 
-from cfg import userAgent
+if '.' in __name__:
+    from .cfg import userAgent
+else:
+    from cfg import userAgent
 
 def getDriver (ifHeadless = True):
     '''
@@ -86,11 +89,11 @@ def switchLabel (dv, n):
     dv.switch_to.window(dv.window_handles[n])
 
 
-def waitTillOpen (dv, secs = 60):
+def waitTillOpen (dv, secs = 60, by = By.XPATH, value = None):
     '''
     等待页面打开
     dv：webdriver
     secs：等待最长时间（秒）， 默认60s
     '''
     wosHomePath = '//a[@class="snowplow-banner-wosLogo"]'
-    Wait(dv, secs).until(EC.presence_of_element_located((By.XPATH, wosHomePath)))
+    Wait(dv, secs).until(EC.presence_of_element_located((by, value if value else wosHomePath)))

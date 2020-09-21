@@ -12,6 +12,10 @@ extractValues : 从paper页抽取字段
 
 import re
 
+if '.' in __name__:
+    from .driverOps import waitTillOpen
+else:
+    from driverOps import waitTillOpen
 
 def __cleanAuthor (txt):
     '''
@@ -36,6 +40,9 @@ def extractValues (dv):
     -------
     extractValues : 没有email为无效页面返回None，否则字段为返回值的各属性
     '''
+    
+    ###等待页面打开
+    waitTillOpen (dv, value='//*[@class="title"]')
     
     def rst(): pass
     

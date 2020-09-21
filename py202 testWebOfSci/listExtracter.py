@@ -14,7 +14,12 @@ getLnks : 一个生成器，从search result页获取paper链接
 
 import re
 
-from sortId import str2SortId, SortId
+if '.' in __name__:
+    from .sortId import str2SortId, SortId
+    from .driverOps import waitTillOpen
+else:
+    from sortId import str2SortId, SortId
+    from driverOps import waitTillOpen
 
 ###wos检索结果中可显示和读取的最大数量
 MAX_DOC = 100000
@@ -32,6 +37,8 @@ def getIds (dv):
     -------
     getIds : 返回id对(sid, qid)
     '''
+    ###等待页面打开
+    waitTillOpen (dv)
     
     sid = dv.execute_script('return SID')
     qid = dv.execute_script('return qid.value')
@@ -71,6 +78,8 @@ def sortResults (dv, sid, qid, sortReq = ''):
     qid : qid
     sortReq : 排序需求，默认或无效需求视为“日期降序”
     '''
+    ###等待页面打开
+    waitTillOpen (dv)
     
     if type(sortReq) is not str: sortReq = ''
     sortId = str2SortId.get (sortReq.upper(), SortId.PYD)
@@ -91,6 +100,10 @@ def getNumOfRst (dv):
     '''
     
     nRstPath = '//h3[@class="title4"]/*'
+    
+    ###等待页面打开
+    waitTillOpen(dv, value=nRstPath)
+    
     return int(dv.find_element_by_xpath(nRstPath).text.replace(',',''))
 
 def __getPattern (lnk):
@@ -129,6 +142,10 @@ def getLnks(dv, nReq, nRst = None):
     
     ###paper链接xpath
     lnkPath = '//a[@class="smallV110 snowplow-full-record"]'
+    
+    ###等待页面打开
+    waitTillOpen(dv,value=lnkPath)
+    
     lnk = dv.find_element_by_xpath(lnkPath)
     
     pat = __getPattern(lnk.get_attribute('href'))

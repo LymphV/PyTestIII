@@ -38,7 +38,7 @@ class SortId:
     SOD = 'SO.D;PY.D;VL.D;AU.A;PG.A' ###来源出版物标题降序
     CFA = 'CF.A;PY.D;AU.A;SO.A;VL.D;PG.A' ###会议名称升序
     CFD = 'CF.D;PY.D;AU.A;SO.A;VL.D;PG.A' ###会议名称降序
-
+    
 ###str到SortId的映射
 str2SortId = {
     'PYD' : SortId.PYD,
@@ -56,3 +56,7 @@ str2SortId = {
     'CFA' : SortId.CFA,
     'CFD' : SortId.CFD,
 }
+
+###默认排序
+dft = 'PYD'
+SortId.dft = str2SortId[dft]

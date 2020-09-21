@@ -11,14 +11,14 @@ wospidey
 
 '''
 
-import cfg
-import driverOps
-import searcher
-import listExtracter
-import paperExtracter
+from . import cfg
+from . import driverOps
+from . import searcher
+from . import listExtracter
+from . import paperExtracter
 
-from wospidey import Wospidey
-from main import main
+from . import wospidey
+from . import main
 
-__version__ = 20200918
-__author__ = 'LymphV'
+__version__ = 20200921
+__author__ = 'LymphV@163.com'

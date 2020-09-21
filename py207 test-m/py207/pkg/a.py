@@ -5,5 +5,5 @@ print (__name__)
 from . import b
 
 def f ():
-    print (x,y)
+    print ('pkg',x,y)
     b.g()

@@ -10,11 +10,18 @@ wospidey
 '''
 from time import time
 
-from cfg import home
-from driverOps import getDriver, newLabel, switchLabel, waitTillOpen
-from searcher import selectDatabase, selectSpan, search, ifSearchFailed
-from listExtracter import getIds, sortResults, getNumOfRst, getLnks, MAX_DOC
-from paperExtracter import extractValues
+if '.' in __name__:
+    from .cfg import home
+    from .driverOps import getDriver, newLabel, switchLabel, waitTillOpen
+    from .searcher import selectDatabase, selectSpan, selectSearchField, search, ifSearchFailed
+    from .listExtracter import getIds, sortResults, getNumOfRst, getLnks, MAX_DOC
+    from .paperExtracter import extractValues
+else:
+    from cfg import home
+    from driverOps import getDriver, newLabel, switchLabel, waitTillOpen
+    from searcher import selectDatabase, selectSpan, selectSearchField, search, ifSearchFailed
+    from listExtracter import getIds, sortResults, getNumOfRst, getLnks, MAX_DOC
+    from paperExtracter import extractValues
 
 class Wospidey:
     '''
@@ -26,8 +33,8 @@ class Wospidey:
         3.从检索结果中抽取文章的标题、作者、通讯作者、电子邮箱等字段
     '''
     
-    __version__ = 20200918
-    __author__ = 'LymphV'
+    __version__ = 20200921
+    __author__ = 'LymphV@163.com'
     
     def __init__ (this, ifHeadless = True, home = home):
         '''
@@ -62,7 +69,7 @@ class Wospidey:
             print()
             raise Exception('maybe banned by wos, please check')
     
-    def crawl (this, keyWord, nReq = MAX_DOC, sortReq = '', timeSpan = None):
+    def crawl (this, keyWord, nReq = MAX_DOC, sortReq = '', fieldReq = '', timeSpan = None):
         '''
         一个生成器，用于采集数据
         以wos核心合集为数据库，按指定时间跨度的关键词检索
@@ -93,6 +100,10 @@ class Wospidey:
         selectSpan(driver, timeSpan)
         print('INFO : time span selected')
 
+        selectSearchField(driver, fieldReq)
+        print('INFO : search field selected')
+        
+        
         search(driver, keyWord)
         
         msg = ifSearchFailed(driver)
@@ -102,16 +113,16 @@ class Wospidey:
 
         sid, qid = getIds(driver)
         sortResults(driver, sid, qid, sortReq)
-        print ('INFO : sort succeed')
+        print('INFO : sort succeed')
         
         nRst = getNumOfRst(driver)
         
         if MAX_DOC < nRst:
-            print ('WARNING : too much results, please consider shortening time span')
+            print('WARNING : too much results, please consider shortening time span')
         
         switchLabel(driver, -1)
         
-        print ('INFO : start to extract data')
+        print('INFO : start to extract data')
         i = 0
         maxI = min(nReq, nRst, MAX_DOC)
         
@@ -120,7 +131,7 @@ class Wospidey:
         for lnk in getLnks(driver, nReq, nRst):
             i += 1
             sTimeCost = ', %.2fs last page'
-            print ('INFO : extracting %d/%d%s' % (i, maxI,
+            print('INFO : extracting %d/%d%s' % (i, maxI,
                     '' if i == 1 else sTimeCost % tc), end = '\r')
             
             ts = time()
@@ -136,7 +147,7 @@ class Wospidey:
             
             yield rst
         tCost = time() - tStart
-        print ('\nINFO : extracting done, %.2fs/paper' % (tCost / maxI))
+        print('\nINFO : extracting done, %.2fs/paper' % (tCost / maxI))
     
     def close (this):
         '''

@@ -13,6 +13,12 @@ search : 输入关键词并进行搜索
 
 from selenium.webdriver.common.keys import Keys
 
+if '.' in __name__:
+    from .searchFieldIndex import SearchFieldIndex, str2SearchFieldIndex
+    from .driverOps import waitTillOpen
+else:
+    from searchFieldIndex import SearchFieldIndex, str2SearchFieldIndex
+    from driverOps import waitTillOpen
 
 class DatabaseIndex:
     '''
@@ -71,10 +77,38 @@ def selectDatabase (dv):
     dv : 当前handle是search页的webdriver
     '''
     
+    ###等待页面打开
+    waitTillOpen (dv, value = '//*[@class="select-db"]')
+    
     sdbJs = 'databaseSelect(document.querySelector(".select-db select")[%s])'
     dv.execute_script(sdbJs % DatabaseIndex.WOS)
 
+def selectSearchField (dv, searchField = ''):
+    '''
+    选择search field
+    
+    Parameters
+    ----------
+    dv : 当前handle是search页的webdriver
+    searchField : searchField代码，见searchFieldIndex.py
+    '''
+    
+    if type(searchField) is not str: searchField = ''
+    fieldIndex = str2SearchFieldIndex.get (searchField.upper(), SearchFieldIndex.dft)
 
+    ###选择search field下拉框
+    fieldPath = '//*[@name="value(select1)"]/following-sibling::*[1]'
+    ###选择search field选项
+    fieldOptions = '//ul[@class="select2-results__options"]/li'
+    
+    ###等待页面打开
+    waitTillOpen (dv, value = fieldPath)
+    
+    ###点击search field下拉框
+    dv.find_element_by_xpath(fieldPath).click()
+    ###点击search field选项
+    dv.find_elements_by_xpath(fieldOptions)[fieldIndex].click()
+    
 
 
 def selectSpan (dv, span = None):
@@ -102,6 +136,9 @@ def selectSpan (dv, span = None):
     seyIptPath = '//*[@class="select2-search__field"]'
     ###选择警告框，当输入wos不允许的时间时会出现
     errorPath = '//*[@aria-live="assertive"]'
+    
+    ###等待页面打开
+    waitTillOpen (dv, value = spanDdlPath)
     
     ###默认选择“所有年份”
     if not span:
@@ -158,6 +195,8 @@ def search (dv, keyWord):
     dv : 当前handle是search页的webdriver
     keyWord : 检索关键词
     '''
+    ###等待页面打开
+    waitTillOpen (dv, value = '//*[@name="value(input1)"]')
 
     inp = dv.find_element_by_name('value(input1)')
     inp.clear()
@@ -176,6 +215,8 @@ def ifSearchFailed (dv):
     -------
     ifSearchFailed : 检索失败则返回检索错误信息，否则返回''
     '''
+    ###等待页面打开
+    waitTillOpen (dv)
     
     msgTags = dv.find_elements_by_class_name('errorMessage')
     return '' if not msgTags else msgTags[0].text.strip()

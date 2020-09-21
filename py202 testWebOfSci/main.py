@@ -13,46 +13,70 @@ import click
 import pandas as pd
 import os
 
-from wospidey import Wospidey
-from sortId import str2SortId
+if __name__ == '__main__':
+    from wospidey import Wospidey
+    from sortId import dft as sortDft, str2SortId
+    from searchFieldIndex import dft as fieldDft, str2SearchFieldIndex
+else:
+    from .wospidey import Wospidey
+    from .sortId import dft as sortDft, str2SortId
+    from .searchFieldIndex import dft as fieldDft, str2SearchFieldIndex
 
-__version__ = 20200918
+__version__ = 20200921
 
 
 folder = 'output'
 if folder not in os.listdir(): os.mkdir(folder)
-dftOutputFile = folder + '/%s(%s,%s%s).csv'
+dftOutputFile = folder + '/%s(%s,%s,%s%s).csv'
 
 
 helpNReq = 'number of papers, default is all'
+helpSortReq = 'custom sorting'
+helpFieldReq = 'custom search field'
 helpStartYear = 'start year, default is the earliest year wos have'
 helpEndYear = 'end year, default is the latest year wos have'
-helpOutputFile = 'output file, default is {keyWord(nReq,sortReq[,(startYear,endYear)])}.csv'
+helpOutputFile = 'output file, default is {keyWord(nReq,sortReq,fieldReq[,(startYear,endYear)])}.csv'
 
 ###排序代码选项
 typeSortReq = click.Choice(str2SortId, case_sensitive=False)
 
+###search field代码选项
+typeFieldReq = click.Choice([
+                    x for x in str2SearchFieldIndex if x not in['LA','DT']
+                ], case_sensitive=False)
 
-def __addRecord (e2ca, email, cauthor):
+"""
+def __addRecord (mp, rcd):
     '''
     添加一条记录，用于去重
+    本用于email去重
     '''
-    if email not in e2ca:
-        e2ca[email] = cauthor
+    emails, cauthors = rcd.emails, rcd.cauthors
+    
+    if emails not in mp:
+        mp[emails] = cauthors
         return
-    if len(cauthor) > len(e2ca[email]):
-        e2ca[email] = cauthor
-
+    if len(cauthors) > len(mp[emails]):
+        mp[emails] = cauthors
+"""
 
 def __saveRecords (records, outputFile):
     '''
     保存记录到csv
     无效记录不存
     '''
-    e2ca = {}
-    for record in records:
-        if not record: continue
-        emails, cauthors = record.emails, record.cauthors
+    #mp = {}
+    rcds = []
+    for rcd in records:
+        if not rcd: continue
+        
+        title, authors, emails, cauthors = (
+            rcd.title, 
+            rcd.authors.replace('; ',';').replace(';',';\n'), 
+            rcd.emails.replace(';',';\n'), 
+            rcd.cauthors.replace('; ',';').replace(';',';\n')
+        )
+        rcds += [(title, authors, emails, cauthors)]
         
         ###多通讯作者的人名与邮箱匹配问题
         ##  最初设想是按先后顺序匹配，但已找到反例，链接、题目如下
@@ -61,8 +85,8 @@ def __saveRecords (records, outputFile):
         ##  还有将作者的email都列出来的，链接、题目如下
         ##  http://apps.webofknowledge.com/full_record.do?product=WOS&search_mode=GeneralSearch&qid=5&SID=7FjRmPV5c9CIWq9EqPo&page=1&doc=21
         ##  Distributed Control of Active Cell Balancing and Low-Voltage Bus Regulation in Electric Vehicles Using Hierarchical Model-Predictive Control
-        ##  如果真要做，打算使用编辑距离最小或最长匹配最大做匹配
-        ##  很大的问题，需要明确需求
+        ##  如果真要做，打算使用编辑距离最小或最长匹配最大做匹配，大概高级人工智能·沈华伟·博弈II中讲的宿舍分配问题最优匹配的市场结清价格可能解决
+        ##  很大的问题，目前没有需求
         '''
         if ';' in emails and ';' in cauthors:
             listEmail = emails.split(';')
@@ -70,13 +94,16 @@ def __saveRecords (records, outputFile):
             if len(listEmail) == len(listCauthor):
                 
                 continue'''
-        __addRecord (e2ca, emails, cauthors)
-        
-    emailss, cauthorss = [*zip(*e2ca.items())]
+        #__addRecord (mp, rcd)
+
+    titles, authorss, emailss, cauthorss = [*zip(*rcds)]
+    #emailss, cauthorss = [*zip(*mp.items())]
     pd.DataFrame.from_dict({
-        'email' : emailss,
-        'cauthor' : cauthorss
-    }).to_csv(outputFile)
+        'title' : titles,
+        'authors' : authorss,
+        'emails' : emailss,
+        'corresponding authors' : cauthorss,
+    }).to_csv(outputFile, index_label='index')
             
 
 
@@ -84,11 +111,12 @@ def __saveRecords (records, outputFile):
 @click.command()
 @click.option('-k', 'keyWord', prompt='key word', help='key word to search')
 @click.option('-n', 'nReq', default=None, help=helpNReq, type=int, show_default=True)
-@click.option('-s', 'sortReq', default='PYD', help='custom sorting', type=typeSortReq, show_default=True)
+@click.option('-s', 'sortReq', default=sortDft, help=helpSortReq, type=typeSortReq, show_default=True)
+@click.option('-f', 'fieldReq', default=fieldDft, help=helpFieldReq, type=typeFieldReq, show_default=True)
 @click.option('--sy', 'startYear', default=None, help=helpStartYear,type=int, show_default=True)
 @click.option('--ey', 'endYear', default=None, help=helpEndYear,type=int, show_default=True)
 @click.option('-o', 'outputFile', default=None, help=helpOutputFile, show_default=True)
-def main (keyWord, nReq, sortReq, startYear, endYear, outputFile):
+def main (keyWord, nReq, sortReq, fieldReq, startYear, endYear, outputFile):
     #print(f'keyWord${keyWord}$ nReq${nReq}$',
     #        f'sortReq${sortReq}$ startYear${startYear}$',
     #        f'endYear${endYear}$ outputFile${outputFile}$')
@@ -101,7 +129,7 @@ def main (keyWord, nReq, sortReq, startYear, endYear, outputFile):
             ',(%s,%s)' % ('' if startYear is None else startYear,
                           '' if endYear is None else endYear)
         )
-        outputFile = dftOutputFile % (keyWord, sNReq, sortReq, sTimeSpan)
+        outputFile = dftOutputFile % (keyWord, sNReq, sortReq, fieldReq, sTimeSpan)
     
     ###outputFile路径错误报错
     try:
@@ -112,7 +140,7 @@ def main (keyWord, nReq, sortReq, startYear, endYear, outputFile):
     wospidey = Wospidey()
     records = []
     try:
-        for record in wospidey.crawl(keyWord, nReq, sortReq, timeSpan):
+        for record in wospidey.crawl(keyWord, nReq, sortReq, fieldReq, timeSpan):
             records += [record]
     except Exception as e:
         print (f'ERROR : "{e}"')
