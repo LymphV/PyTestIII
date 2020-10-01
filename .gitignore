@@ -128,3 +128,4 @@ dmypy.json
 *.zip
 
 py204 testWosSpi/*
+py212 testSlides/py212.slides.html

@@ -35,7 +35,7 @@ helpSortReq = 'custom sorting'
 helpFieldReq = 'custom search field'
 helpStartYear = 'start year, default is the earliest year wos have'
 helpEndYear = 'end year, default is the latest year wos have'
-helpOutputFile = 'output file, default is {keyWord(nReq,sortReq,fieldReq[,(startYear,endYear)])}.csv'
+helpOutputFile = 'output file, default is {output/keyWord(nReq,sortReq,fieldReq[,(startYear,endYear)])}.csv'
 
 ###排序代码选项
 typeSortReq = click.Choice(str2SortId, case_sensitive=False)
