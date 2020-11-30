@@ -127,7 +127,7 @@ class YoudaoSynonym:
     >>>yd.close() ###关闭浏览器，必须
     '''
     
-    __version__ = 20201111
+    __version__ = 20201130
     __author__ = 'LymphV@163.com'
     
     __filters = YoudaoFilter.filters
@@ -146,21 +146,44 @@ class YoudaoSynonym:
     
     
     def __iknow (this):
+        pathClose = '//*[@class="guide-close"]/../../../*[contains(@style,"block")]//*[@class="guide-close"]'
         pathIKnow = '//a[@class="i-know"]/../../div[contains(@style,"block")]//a[@class="i-know"]'
+        close = this.__dv.find_elements_by_xpath(pathClose)
+        if close: close[0].click()
         iknow = this.__dv.find_elements_by_xpath(pathIKnow)
         if iknow: iknow[0].click()
     
+    def __getMode (this):
+        pathSelect = '//*[@class="select clear"]/li[contains(@class,"selected")]'
+        dv = this.__dv
+        return dv.find_element_by_xpath(pathSelect).get_attribute('data-value')
+    
     def __ch2en (this):
         pathLang = '//*[@class="select-text"]'
-        pathCh2En = '//*[@data-value="zh-CHS2en"]/../../*[contains(@style,"block")]/*[@data-value="zh-CHS2en"]'
+        pathCh2En = '//*[@data-value="zh-CHS2en"]/../../*[contains(@style,"block")]/*[@data-value="zh-CHS2en"]/a'
+        pathWait = '//*[@data-value="zh-CHS2en"]/../../*[contains(@style,"none")]/*[@data-value="zh-CHS2en"]'
         
+        if this.__getMode() == 'zh-CHS2en': return
         dv = this.__dv
         waitTillOpen(dv, 10, value=pathLang)
         dv.find_element_by_xpath(pathLang).click()
         waitTillOpen(dv, 10, value=pathCh2En)
         dv.find_element_by_xpath(pathCh2En).click()
+        waitTillOpen(dv, 10, value=pathWait)
         
+    def __auto (this):
+        pathLang = '//*[@class="select-text"]'
+        pathAuto = '//*[@data-value="AUTO"]/../../*[contains(@style,"block")]/*[@data-value="AUTO"]/a'
+        pathWait = '//*[@data-value="AUTO"]/../../*[contains(@style,"none")]/*[@data-value="AUTO"]'
         
+        if this.__getMode() == 'AUTO': return
+        dv = this.__dv
+        waitTillOpen(dv, 10, value=pathLang)
+        dv.find_element_by_xpath(pathLang).click()
+        waitTillOpen(dv, 10, value=pathAuto)
+        dv.find_element_by_xpath(pathAuto).click()
+        waitTillOpen(dv, 10, value=pathWait)
+    
     def start (this, page = home):
         '''
         打开有道翻译网址
@@ -172,12 +195,16 @@ class YoudaoSynonym:
         if not page: return
         if not this.__dv:
             this.__dv = getDriver(this.__ifHeadless)
-        this.__dv.get(page)
-        this.__iknow()
-        #this.__ch2en()
+        try:
+            this.__dv.get(page)
+            this.__iknow()
+            #this.__ch2en()
+        except BaseException as e:
+            this.close()
+            raise e
         
     
-    def __getSynonyms (this, s : str):
+    def __getSynonyms (this, s : str, mode):
         '''
         使用有道翻译获得同义词集
         '''
@@ -190,6 +217,9 @@ class YoudaoSynonym:
         pathRelative = '//div[@class="dict__relative"]/*'
         pathTrans = '//a[@id="transMachine"]'
         
+        ###翻译语言
+        if mode == 'ch2en': this.__ch2en()
+        else: this.__auto()
         
         ###输入
         waitTillOpen(dv, 10, value=pathInput)
@@ -228,6 +258,7 @@ class YoudaoSynonym:
         ###翻译相关结果
         relative = dv.find_elements_by_xpath(pathRelative)
         rst |= {x.text for x in relative}
+        this.__auto()
         ipt.clear()
         dv.find_element_by_xpath(pathTrans).click()
         return rst
@@ -240,7 +271,7 @@ class YoudaoSynonym:
         return YoudaoFilter.filter(ss, YoudaoSynonym.__filters)
 
     
-    def getSynonyms (this, s : str) -> set:
+    def getSynonyms (this, s : str, mode = '') -> set:
         '''
         获取中文短语的英语同义词集合
         
@@ -252,7 +283,7 @@ class YoudaoSynonym:
         -------
         getSynonyms : 英文同义词集合
         '''
-        return this.__filter(this.__getSynonyms(s))
+        return this.__filter(this.__getSynonyms(s, mode.lower()))
     def close (this):
         '''
         关闭浏览器，必须
