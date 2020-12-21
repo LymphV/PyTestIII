@@ -127,7 +127,7 @@ class YoudaoSynonym:
     >>>yd.close() ###关闭浏览器，必须
     '''
     
-    __version__ = 20201130
+    __version__ = 20201201
     __author__ = 'LymphV@163.com'
     
     __filters = YoudaoFilter.filters
@@ -211,7 +211,7 @@ class YoudaoSynonym:
         dv = this.__dv
         #dv.refresh()
         pathInput = '//textarea[@class="input__original__area"]'
-        pathAnswer = '//div[@class="input__target__text"]/p/span'
+        pathAnswer = '//div[contains(@class,"input__target__text")]/p/span'
         pathSuggestWait = '//*[@class="suggest__title"]/../../*[contains(@style,"block")]'
         pathSuggest = '//*[@class="suggest__title"]/../ul/*'
         pathRelative = '//div[@class="dict__relative"]/*'
