@@ -130,3 +130,5 @@ dmypy.json
 py204 testWosSpi/*
 py212 testSlides/py212.slides.html
 untitled.txt
+*log*.txt
+*error*.txt
