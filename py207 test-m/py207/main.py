@@ -12,7 +12,10 @@ else:
 def main():
     f()
 
-from pkg.pkg.x import y
+if '.' in __name__:
+    from .pkg.pkg.x import y
+else:
+    from pkg.pkg.x import y
 
 if __name__ == '__main__':
     print ('main.py')
