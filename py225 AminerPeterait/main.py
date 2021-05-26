@@ -41,16 +41,19 @@ if typeOfScript() == 'jupyter':
 else:
     from tqdm import tqdm, trange
 
+def ourError (name, error, errorType = ''):
+    fprint(f'[ERROR] ({getNow()}) {repr(name)} : {errorType} : {repr(error)}\n', file='error.txt', path='error')
+
 def ourLog (name, log, logType = ''):
-    fprint(f'[LOG] ({getNow()}) {repr(name)} : {logType} : "{log}"\n', file='log.txt', path='log')
+    fprint(f'[LOG] ({getNow()}) {repr(name)} : {logType} : {repr(log)}\n', file='log.txt', path='log')
 
 
-def __main (whoami):
-    start = time()
+def __main (whoami, start):
     ### 打开浏览器
     driver = getDriver()
     
     frmt('打开浏览器')
+    ourLog('','打开浏览器')
 
     ### 连接数据库
 
@@ -58,15 +61,18 @@ def __main (whoami):
     cursor = db.cursor()
     addCursor(cursor)
     frmt('连接数据库')
+    ourLog('','连接数据库')
 
     try:
         ### 采集
-
-        frmt('开始采集')
         now = 0
-        names = [name for name in namelist if not checkDoneName(name)]
+        frmt('检验人名')
+        names = [name for name in tqdm(namelist, ncols=ncols) if not checkDoneName(name)]
+        frmt('开始采集')
+        ourLog('','开始采集')
         for name in tqdm(names, ncols=ncols):
             frmt(name,end=' ')
+            ourLog(name,'')
             waitTime = waitUnit
             iWait = 0
             ###获取id
@@ -75,7 +81,7 @@ def __main (whoami):
                     sleep(waitTime)
                     iWait += 1
                     if waitTime < 2 * waitLoading: waitTime += waitUnit
-                    else: ourLog(name, iWait, 'list open failed')
+                    else: ourError(name, iWait, 'list open failed')
                     continue
                 waitTime = waitUnit
                 ids = getScholarIds(driver, name)
@@ -86,6 +92,7 @@ def __main (whoami):
             ###采集学者信息
             for id in tqdm(ids, ncols=ncols, leave=False):
                 frmt(name, id, end=' ')
+                ourLog(name,id)
                 waitTime = waitUnit
                 iWait = 0
                 noNameCount = 0
@@ -97,7 +104,7 @@ def __main (whoami):
                         getScholarPage(driver, id)
                         ex = AminerScholarExtracter(driver)
 
-                        name, pinyin = ex.getName()
+                        nowName, pinyin = ex.getName()
                         portrait = ex.getPortrait()
                         title = ex.getTitle()
                         department = ex.getDepartment()
@@ -118,20 +125,22 @@ def __main (whoami):
                         sleep(waitTime)
                         iWait += 1
                         if waitTime < 2 * waitLoading: waitTime += waitUnit
-                        ourLog(name, f'id({id}) wait({iWait})', str(e))
+                        ourError(name, f'id({id}) wait({iWait})', str(e))
                         continue
                         #if str(e) == 'load failed' or str(e) == 'no sort by reference':
                         #    continue
                         #raise e
-                    if name is None:
+                    if nowName is None or nowName != name:
                         if noNameCount < 10:
                             iWait += 1
                             noNameCount += 1
-                            ourLog(name, f'id({id}) wait({iWait})', 'no name')
+                            ourError(name, f'id({id}) wait({iWait})', f'no name `{nowName}`')
                             continue
                         else: 
-                            ourLog(name, f'id({id}) wait({iWait})', 'invalid id without name')
+                            ourError(name, f'id({id}) wait({iWait})', f'invalid id without name `{nowName}`')
                             break
+                    ourLog(name, 'info done', id)
+                    
                     insertScholar(id, name, pinyin, phone, title, department, fax, email, address, experience, education, brief)
                     insertPortrait(id, portrait)
                     insertWebpages(id, webpages)
@@ -145,32 +154,37 @@ def __main (whoami):
             insertDoneName(name)
             db.commit()
         frmt('采集完成')
+        ourLog('','采集完成')
     finally:
         ### 关闭数据库
         db.close()
         frmt('关闭数据库')
+        ourLog('','关闭数据库')
 
         ### 关闭浏览器
         driver.quit()
         frmt('关闭浏览器')
+        ourLog('','关闭浏览器')
         
     ###发送邮件
     sendEmail(f'Sir, scholars\' information downloaded, which cost {convertSeconds(time() - start)}.', f'mission accomplished reported by spider `{whoami}`')
     frmt('发送邮件')
+    ourLog('','发送邮件')
 
 @click.command()
 @click.option('-I', '--whoami', 'whoami', prompt='who am i? please name me', help='the name of me, the spider ready to climb')
 def main (whoami):
+    start = time()
     while 1:
         try:
-            __main(whoami)
+            __main(whoami, start)
             break
         except KeyboardInterrupt as e:
             raise e
         except err.OperationalError as e:
-            ourLog('', str(e), 'err.OperationalError')
+            ourError('', str(e), 'err.OperationalError')
         except Exception as e:
-            ourLog('', str(e), 'Exception')
+            ourError('', str(e), 'Exception')
 
 if __name__ == '__main__':
     main()
