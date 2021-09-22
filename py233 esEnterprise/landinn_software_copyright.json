@@ -1,0 +1,83 @@
+{
+    "settings": 
+    {
+        "index" :
+        {
+            "similarity" :
+            {
+                "default" :
+                {
+                    "type" : "BM25",
+                    "b" : 0.1,
+                    "k1" : 1.2
+                }
+            }
+        },
+        "analysis": 
+        {
+            "filter": 
+            {
+                "english_stop": 
+                {
+                    "type":       "stop",
+                    "stopwords":  "_english_"
+                },
+                "light_english_stemmer": 
+                {
+                    "type":       "stemmer",
+                    "language":   "light_english" 
+                },
+                "english_possessive_stemmer": 
+                {
+                    "type":       "stemmer",
+                    "language":   "possessive_english"
+                }
+            },
+            "analyzer": 
+            {
+                "default": 
+                {
+                    "char_filter": [ "html_strip" ],
+                    "tokenizer":  "ik_max_word",
+                    "filter": 
+                    [
+                        "english_possessive_stemmer",
+                        "lowercase",
+                        "english_stop",
+                        "light_english_stemmer", 
+                        "asciifolding" 
+                    ]
+                },
+                "default_search":
+                {
+                    "char_filter": [ "html_strip" ],
+                    "tokenizer":  "ik_smart",
+                    "filter": 
+                    [
+                        "english_possessive_stemmer",
+                        "lowercase",
+                        "english_stop",
+                        "light_english_stemmer", 
+                        "asciifolding" 
+                    ]
+                }
+            }
+        }
+    },
+    
+    
+    "mappings" :
+    {
+        "dynamic" : "false",
+        "properties" :
+        {
+            "id" : {"type" : "keyword", "store" : true},
+            "name" : {"type" : "text"},
+            "simpleName" : {"type" : "text"},
+            "enterprises" : {"type" : "text"},
+            "registration_time" : {"type" : "date"},
+            "publish_time" : {"type" : "date"},
+            "event_time" : {"type" : "date"}
+        }
+    }
+}

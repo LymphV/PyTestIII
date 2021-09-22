@@ -1,0 +1,101 @@
+{
+    "settings": 
+    {
+        "index" :
+        {
+            "similarity" :
+            {
+                "default" :
+                {
+                    "type" : "BM25",
+                    "b" : 0.1,
+                    "k1" : 1.2
+                }
+            }
+        },
+        "analysis": 
+        {
+            "filter": 
+            {
+                "english_stop": 
+                {
+                    "type":       "stop",
+                    "stopwords":  "_english_"
+                },
+                "light_english_stemmer": 
+                {
+                    "type":       "stemmer",
+                    "language":   "light_english" 
+                },
+                "english_possessive_stemmer": 
+                {
+                    "type":       "stemmer",
+                    "language":   "possessive_english"
+                }
+            },
+            "analyzer": 
+            {
+                "default": 
+                {
+                    "char_filter": [ "html_strip" ],
+                    "tokenizer":  "ik_max_word",
+                    "filter": 
+                    [
+                        "english_possessive_stemmer",
+                        "lowercase",
+                        "english_stop",
+                        "light_english_stemmer", 
+                        "asciifolding" 
+                    ]
+                },
+                "default_search":
+                {
+                    "char_filter": [ "html_strip" ],
+                    "tokenizer":  "ik_smart",
+                    "filter": 
+                    [
+                        "english_possessive_stemmer",
+                        "lowercase",
+                        "english_stop",
+                        "light_english_stemmer", 
+                        "asciifolding" 
+                    ]
+                },
+                "name_analyzer":
+                {
+                    "char_filter": [ "html_strip" ],
+                    "tokenizer":  "standard",
+                    "filter": 
+                    [
+                        "lowercase",
+                        "asciifolding" 
+                    ]
+                }
+            }
+        }
+    },
+    
+    
+    "mappings" :
+    {
+        "dynamic" : "false",
+        "properties" :
+        {
+            "enterprise_id" : {"type" : "keyword", "store" : true},
+            "is_chinese" : {"type" : "integer"},
+            "has_officialPage" : {"type" : "integer"},
+            "name" : {"type" : "text", "analyzer" : "name_analyzer"},
+            "industry" : {"type" : "text"},
+            "businessScope" : {"type" : "text"},
+            "province" : {"type" : "keyword"},
+            "city" : {"type" : "keyword"},
+            "regCapital" : {"type" : "long"},
+            "establishmentTime" : {"type" : "date"},
+            "entityType" : {"type" : "integer"},
+            "baseInfo" : {"type" : "text"},
+            "has_phone" : {"type" : "integer"},
+            "has_email" : {"type" : "integer"},
+            "has_weibo" : {"type" : "integer"}
+        }
+    }
+}
