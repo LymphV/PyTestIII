@@ -1,4 +1,8 @@
 import pandas as pd
+from .utils import isNull, stdSqlData, stdSqlCol
+
+__version__ = 20210819
+__author__ = 'LymphV@163.com'
 
 dbs = []
 def addDb (db):
@@ -11,6 +15,7 @@ def sql(s):
     rst = cursor.fetchall()
     
     rst = pd.DataFrame(rst, columns=[*zip(*cursor.description)][0] if cursor.description else [])
+    cursor.close()
     return rst
 
 def describe (table):
@@ -19,14 +24,9 @@ def describe (table):
     return rst
 
 def select (items, table, *args, **kwargs):
-    def deal (s):
-        s = str(s).strip()
-        return f'`{s}`' if s.isalnum() else s
-    
-    
     if type(items) is str:
         items = items.split(',')
-    item = ','.join([deal(x) for x in items])
+    item = ','.join([stdSqlCol(x) for x in items])
         
     if args:
         r = range(*args)
@@ -34,7 +34,7 @@ def select (items, table, *args, **kwargs):
         limit = f'limit {start}, {stop - start}'
     else: limit = ''
     
-    s = f'select {item} from {deal(table)} {" ".join([f"{x} {kwargs[x]}" for x in kwargs if kwargs[x].strip()])} {limit}'
+    s = f'select {item} from {stdSqlCol(table)} {" ".join([f"{x} {kwargs[x]}" for x in kwargs if kwargs[x].strip()])} {limit}'
     
     rst = sql(s)
     rst.columns.name = table

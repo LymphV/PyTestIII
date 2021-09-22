@@ -10,5 +10,5 @@ from .sendEmail import sendEmail
 
 
 
-__version__ = 20201110
+__version__ = 20210615
 __author__ = 'LymphV@163.com'

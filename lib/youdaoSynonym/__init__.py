@@ -17,5 +17,5 @@ from .youdaoSynonym import YoudaoSynonym
 
 
 
-__version__ = 20201029
+__version__ = 20210618
 __author__ = 'LymphV@163.com'

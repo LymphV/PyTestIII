@@ -9,12 +9,16 @@ import smtplib
 from email.mime.text import MIMEText
 from email.header import Header
 
+from datetime import datetime, timedelta, timezone
+
 host="smtp.163.com"  #设置服务器
 user="pyLymphV"    #用户名
 password="GDSJXWEJZKNNNHNA"   #口令 
 
 sender = 'pyLymphV@163.com'
 
+tz = timezone(timedelta(hours=8))
+graduation = datetime(2022,7,1,tzinfo=tz)
 
 def sendEmail (content = 'test', subject = 'hello there', receiver = '470481777@qq.com'):
     '''
@@ -26,6 +30,11 @@ def sendEmail (content = 'test', subject = 'hello there', receiver = '470481777@
     subject : 邮件主题
     receiver : 接收者，暂不可列表
     '''
+    
+    ### 防止毕业后仍然收到邮件
+    if graduation < datetime.now(tz): return
+
+    
     message = MIMEText(content, 'plain', 'utf-8')
     message['From'] = sender
     message['To'] =  receiver

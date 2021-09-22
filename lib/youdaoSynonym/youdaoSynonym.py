@@ -42,11 +42,15 @@ class YoudaoFilter:
 
     def filterTerm (s : str) -> set:
         '''
-        去除中括号的术语标志
+        去除中括号和大括号的术语标志
         '''
         s = re.sub(r'\[.+?\]', ' ', s)
         s = re.sub(r'\[.*?$', '', s)
         s = re.sub(r'^.*?]', '', s)
+        
+        s = re.sub(r'\{.+?\}', ' ', s)
+        s = re.sub(r'\{.*?$', '', s)
+        s = re.sub(r'^.*?}', '', s)
         return {s}
 
     def filterBracket (s : str) -> set:
@@ -127,7 +131,7 @@ class YoudaoSynonym:
     >>>yd.close() ###关闭浏览器，必须
     '''
     
-    __version__ = 20201201
+    __version__ = 20210618
     __author__ = 'LymphV@163.com'
     
     __filters = YoudaoFilter.filters

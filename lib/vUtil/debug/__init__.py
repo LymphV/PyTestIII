@@ -29,7 +29,7 @@ import traceback
 
 from .ifDebug import ifDebug
 
-__version__ = 20210511
+__version__ = 20210623
 __author__ = 'LymphV@163.com'
 
 class debug:
@@ -62,10 +62,22 @@ class debug:
         
         vars = [x.strip() for x in vars.split(',')]
         
-        
         if len(args): print(f'{file} line {line} :', ', '.join([f'{x} = {repr(y)}' for x, y in zip(vars, args)]), **kw)
 
+    @property
+    def file (this):
+        return traceback.extract_stack()[-2].filename
+    
+    @property
+    def line (this):
+        return traceback.extract_stack()[-2].line
+    
+    @property
+    def lineno (this):
+        return traceback.extract_stack()[-2].lineno
+    
 if ifDebug():
     debug = debug()
 else:
-    def debug (*args, **kw): pass
+    debug.__call__ = lambda *x, **y: None
+    debug = debug()

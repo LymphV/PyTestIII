@@ -4,6 +4,7 @@ import pymysql
 import pandas as pd
 
 from .cfg import mysqlIp, mysqlPort, mysqlUser, mysqlPassword, mysqlDb
+from .utils import stdSqlData, stdSqlCol
 
 
 class MysqlProxy:
@@ -11,7 +12,7 @@ class MysqlProxy:
     mysql代理
     '''
     
-    __version__ = 20210517
+    __version__ = 20210825
     __author__ = 'LymphV@163.com'
     
     def __init__ (this, ip=mysqlIp, port=mysqlPort, user=mysqlUser, password=mysqlPassword, db=mysqlDb):
@@ -24,15 +25,27 @@ class MysqlProxy:
         this.user = user
         this.password = password
         this.database = db
+        this.history = None
         this.start()
+    
+    def __str__ (this):
+        data = {'host' : this.ip, 'port' : this.port, 'user' : this.user}
+        return f'<vMysql.MysqlProxy({data})>'
+    
+    def __repr__ (this):
+        return str(this)
+    
     def start (this):
         if pymysql.__version__ < '1':
             this.__db = pymysql.connect(this.ip, this.user, this.password,port=this.port,charset='utf8mb4',db=this.database)
         else:
             this.__db = pymysql.connect(host=this.ip, user=this.user, password=this.password,port=this.port,charset='utf8mb4',database=this.database)
     def close (this):
-        if this.__db: this.__db.close()
-        this.__db = None
+        if this.__db: 
+            try:
+                this.__db.close()
+            except pymysql.Error: pass
+        #this.__db = None
     
     @property
     def db (this):
@@ -48,8 +61,9 @@ class MysqlProxy:
     def commit(this):
         this.db.commit()
     
-    def sql(this, s, ifCommit=False):
+    def sql(this, s, ifCommit=False, ifRetry=True):
         '执行sql语句'
+        this.history = s
         db = this.db
         cursor = db.cursor()
         cursor.execute(s)
@@ -58,24 +72,30 @@ class MysqlProxy:
         rst = pd.DataFrame(rst, columns=[*zip(*cursor.description)][0] if cursor.description else [])
         
         if ifCommit: db.commit()
+        cursor.close()
         return rst
     
-    def describe (this, table):
+    __call__ = sql
+    
+    def show (this, sth='schemas', ifCommit=True, ifRetry=True, **kwargs):
+        'show'
+        s = f'show {sth} {" ".join([f"{x} {kwargs[x]}" for x in kwargs if kwargs[x].strip()])};'
+        rst = this(s, ifCommit=ifCommit, ifRetry=ifRetry)
+        rst.columns.name = sth
+        return rst
+    
+    def describe (this, table, ifCommit=True, ifRetry=True):
         '表描述'
-        rst = this.sql(f'describe {table};')
+        rst = this.sql(f'describe {table};', ifCommit=ifCommit, ifRetry=ifRetry)
         rst.columns.name = table
         return rst
 
-    def select (this, items, table, *args, **kwargs):
+    def select (this, items, table, *args, ifCommit=True, ifRetry=True, **kwargs):
         'select 语句'
-        def deal (s):
-            s = str(s).strip()
-            return f'`{s}`' if s.isalnum() else s
-        
         
         if type(items) is str:
             items = items.split(',')
-        item = ','.join([deal(x) for x in items])
+        item = ','.join([stdSqlCol(x) for x in items])
             
         if args:
             r = range(*args)
@@ -83,13 +103,45 @@ class MysqlProxy:
             limit = f'limit {start}, {stop - start}'
         else: limit = ''
         
-        s = f'select {item} from {deal(table)} {" ".join([f"{x} {kwargs[x]}" for x in kwargs if kwargs[x].strip()])} {limit};'
+        s = f'select {item} from {stdSqlCol(table)} {" ".join([f"{x} {kwargs[x]}" for x in kwargs if kwargs[x].strip()])} {limit};'
         
-        rst = this.sql(s)
+        rst = this.sql(s, ifCommit=ifCommit, ifRetry=ifRetry)
         rst.columns.name = table
         return rst
 
-    def count (this, table, *args, **kwargs):
+    def count (this, table, *args, ifCommit=True, ifRetry=True, **kwargs):
         '计数'
-        rst = this.select('count(*)', table, *args, **kwargs)
+        rst = this.select('count(*)', table, *args, ifCommit=ifCommit, ifRetry=ifRetry, **kwargs)
         return rst
+    
+    def insert (this, table, *args, ifCommit=True, ifRetry=True, ignore=False, replace=False, **kwargs):
+        '''
+        插入
+        
+        *args为顺序数据库字段，**kwargs为指定数据库字段，不同时生效，优先使用*args
+        
+        若指定字段与已有参数名相同则建议使用**{'`table`' : None}的形式传参
+        '''
+        if len(args) == 0 and len(kwargs) == 0: return
+        
+        if replace: ignore = False
+        ignore = ' ignore' if ignore else ''
+        replace = 'replace' if replace else 'insert'
+        
+        if len(args):
+            s = f'''
+                {replace}{ignore} into {table} values %s;
+            '''
+            value = '(' + ','.join([stdSqlData(x,db=this) for x in args]) + ')'
+            return this.sql(s % value, ifCommit=ifCommit, ifRetry=ifRetry)
+
+        col, value = [*zip(*kwargs.items())]
+        col = '(' + ','.join([stdSqlCol(x) for x in col]) + ')'
+        value = '(' + ','.join([stdSqlData(x,db=this) for x in value]) + ')'
+        s = f'''
+            {replace}{ignore} into {table} %s values %s;
+        '''
+        return this.sql(s % (col, value), ifCommit=ifCommit, ifRetry=ifRetry)
+    
+    def __getattr__ (this, name):
+        return this.db.__getattribute__(name)

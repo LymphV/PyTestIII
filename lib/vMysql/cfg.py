@@ -14,9 +14,15 @@
 
 
 ###mysql配置
-mysqlIp = '10.208.63.47'
+#mysqlIp = '10.208.63.47'
+#mysqlPort = 3306
+#mysqlDb = 'landinn'
+#mysqlUser = 'root'
+#mysqlPassword = 'linlei'
+
+mysqlIp = 'rds-inner.mysql.zhangbei.rds.aliyuncs.com'
 mysqlPort = 3306
 mysqlDb = 'landinn'
-mysqlUser = 'root'
-mysqlPassword = 'linlei'
+mysqlUser = 'landinn_es'
+mysqlPassword = 'AsdfQwpo_369'
 
