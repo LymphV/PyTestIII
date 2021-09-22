@@ -134,5 +134,14 @@ untitled.txt
 *error*.txt
 py226 tianyancha/apiData/
 py227 tyc/tycSearcher/apiData/
+py235 ucasClimbed/混合/
+py235 ucasClimbed/专任教师/
+py235 ucasClimbed/两院院士/
+py235 ucasClimbed/杰出青年/
+py235 ucasClimbed/研究生导师/
+py235 ucasClimbed/专任教师_bad/
+py235 ucasClimbed/两院院士_bad/
+py235 ucasClimbed/杰出青年_bad/
+py235 ucasClimbed/研究生导师_bad/
 
 !/lib/
