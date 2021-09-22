@@ -11,9 +11,3 @@ ncols = 950
 port = 9200
 master = f'http://{host}:{port}'
 contType = '-H "content-Type:application/json"'
-
-
-
-dbHost = 'rds-inner.mysql.zhangbei.rds.aliyuncs.com'
-dbUser = 'landinn_es'
-dbPwd = 'AsdfQwpo_369'
