@@ -133,5 +133,6 @@ untitled.txt
 *log*.txt
 *error*.txt
 py226 tianyancha/apiData/
+py227 tyc/tycSearcher/apiData/
 
 !/lib/
