@@ -143,5 +143,7 @@ py235 ucasClimbed/专任教师_bad/
 py235 ucasClimbed/两院院士_bad/
 py235 ucasClimbed/杰出青年_bad/
 py235 ucasClimbed/研究生导师_bad/
+lib/vMysql/cfg.py
+
 
 !/lib/
