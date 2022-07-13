@@ -21,16 +21,19 @@ def isNull (s):
     pd.isna可以检测float('nan'), math.nan, np.nan, None, pd.NaT, pd.NA，视为null
     并且'', []视为null
     '''
-    return isinstance(s, Sized) and len(s) == 0 or pd.isna(s)
+    return len(s) == 0  if isinstance(s, Sized) else pd.isna(s)
 
 
-def stdSqlData (s, db=None):
+def stdSqlData (s, db=None, remain=False):
     '''
     变量插入sql语句格式化
     '''
-    if isinstance(s, str): s = s.strip()
-    if isNull(s): return 'null'
-    if type(s) in [list, dict, set]: s = str(s)
+    if not remain:
+        if isinstance(s, str): s = s.strip()
+        if isNull(s): return 'null'
+    else:
+        if s is None: return 'null'
+    if isinstance(s, (list, dict, set)): s = str(s)
     
     try:
         if db is None:

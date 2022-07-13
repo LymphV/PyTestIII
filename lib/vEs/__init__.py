@@ -4,6 +4,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch import TransportError, ConnectionError, ConnectionTimeout
 from elasticsearch import helpers
 import pandas as pd
+import json
 
 from vUtil.vLog import vError
 
@@ -14,7 +15,7 @@ class EsProxy:
     es代理
     '''
 
-    __version__ = 20210823
+    __version__ = 20211207
     __author__ = 'LymphV@163.com'
 
     def __init__ (this, host=esHost, port=esPort):
@@ -77,6 +78,35 @@ class EsProxy:
                 if errorInfo is not None:
                     ourError(errorInfo, repr(e))
         return rst
-
+    
+    def createIndex (this, index, file=None, body=None):
+        '''
+        创建索引
+        
+        index : 索引名
+        file : body文件名，默认为f'{index}.json'
+        body : body字典，默认为file的内容
+        '''
+        if body is None:
+            with open(file or f'{index}.json') as f:
+                body = json.load(f)
+        return this.indices.create(index, body)
+    
+    def dropIndex (this, index):
+        '删除索引'
+        return this.indices.delete(index)
+        
+    def reindex (this, indexFrom, indexTo):
+        '拷贝索引'
+        body = {
+            "source": {
+                "index": indexFrom
+            },
+            "dest": {
+                "index": indexTo
+            }
+        }
+        return this.es.reindex(body)
+    
     def __getattr__ (this, name):
         return this.es.__getattribute__(name)

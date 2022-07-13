@@ -1,7 +1,7 @@
 import pandas as pd
 from .utils import isNull, stdSqlData, stdSqlCol
 
-__version__ = 20210819
+__version__ = 20210608
 __author__ = 'LymphV@163.com'
 
 dbs = []
@@ -45,4 +45,5 @@ def count (table, *args, **kwargs):
     return rst
 
 
-from .MysqlProxy import MysqlProxy
+from .mysqlProxy import MysqlProxy
+from .magic import _setDb
