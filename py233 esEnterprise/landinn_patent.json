@@ -60,6 +60,16 @@
                         "light_english_stemmer", 
                         "asciifolding" 
                     ]
+                },
+                "name_analyzer":
+                {
+                    "char_filter": [ "html_strip" ],
+                    "tokenizer":  "standard",
+                    "filter": 
+                    [
+                        "lowercase",
+                        "asciifolding" 
+                    ]
                 }
             }
         }
@@ -79,7 +89,9 @@
             "enterprises" : {"type" : "text"},
             "applicant_date" : {"type" : "date"},
             "grant_date" : {"type" : "date"},
-            "publication_date" : {"type" : "date"}
+            "publication_date" : {"type" : "date"},
+            "names" : {"type" : "nested", "properties":{"name" : {"type" : "text", "analyzer" : "name_analyzer"}}},
+            "enterprise_names" : {"type" : "nested", "properties":{"enterprise_name" : {"type" : "text", "analyzer" : "name_analyzer"}}}
         }
     }
 }

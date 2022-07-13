@@ -2,6 +2,7 @@
 import pandas as pd
 import os, re, sys, json
 import pymysql
+from typing import Callable, List, Any, Optional
 
 from vUtil.vLog import frmt, VError, VLog, rootPath
 from vUtil.debug import debug
@@ -19,18 +20,24 @@ def addPublishId (x, n):
     else: s = ','.join(["'(',publish_id,')'"] * n)
     return f'''concat({s},{x})'''
 
-def rmUnseen (s, none = ''):
+def rmUnseen (s, none:Any = ''):
     '''
     去除不可见字符
     '''
     if s is None: return none
     return re.sub(r'\s+', ' ', str(s))
 
-def groupConcat (data, field = 'scholar_id', sep = '\n'):
+def groupConcat (data, field = 'scholar_id', sep = '\n', seps = None):
+    '''
+    如果第一列不是field怎么办
+    '''
+    seps = seps or {}
+    join = lambda arr, sep : list(arr) if not isinstance(sep, str) else sep.join(arr)
     return pd.DataFrame([
         [x] +
         [
-            sep.join([rmUnseen(data[j][i]) for i in range(len(data)) if data[field][i] == x and data[j][i]])
+            join([rmUnseen(data[j][i]) for i in range(len(data)) if data[field][i] == x and data[j][i]],
+                seps.get(j,sep))
             for j in data if j != field
         ] for x in sorted(set(data[field]))
     ], columns = [*data])
@@ -40,6 +47,8 @@ class BaseGetData:
     需实现成员函数
         self._getData(db, *args)
     '''
+    _getData : Callable
+
     def __init__ (self, this, thisEn, table, idCol):
         self.this = this
         self.thisEn = thisEn
@@ -61,6 +70,7 @@ class BaseGetData:
                 vGlobals.ourError(f'({debug.file}:{debug.lineno})', 'mysql read error',
                     repr(e), f'\nhistory="""{db.history}"""')
                 db.close()
+                if e.args[0] in db.codeErr: raise e
 
 
 class MainGetData(BaseGetData):
@@ -83,6 +93,14 @@ class MainGetData(BaseGetData):
             self.stdData(data:pd.DataFrame)
             self.stdInfo(info:pd.DataFrame)
     '''
+    sTmpPublish : str
+    sInsertPublish : List[str]
+    sSelectData : str
+    sSelectDataMini : str
+    sSelectInfo : str
+    stdData : Callable[[pd.DataFrame], dict]
+    stdInfo : Callable[[pd.DataFrame], dict] 
+
     def __init__ (self, this, thisEn, table, idCol):
         BaseGetData.__init__(self, this, thisEn, table, idCol)
 

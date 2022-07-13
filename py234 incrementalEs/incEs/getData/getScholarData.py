@@ -65,7 +65,7 @@ class GetData(MainGetData):
     self.getRangeData : 获取范围数据
     self.getIdData : 获取指定id数据
     '''
-    def __init__ (self, this, thisEn, table, idCol, nIdSep):
+    def __init__ (self, this, thisEn, table, idCol, nIdSep, isAbroad=False):
         MainGetData.__init__(self, this, thisEn, table, idCol)
 
         self.sTmpPublish = f'''
@@ -158,7 +158,7 @@ class GetData(MainGetData):
 
         self.sSelectInfo = f'''
         select  {thisEn}_id,
-                {1 if len(this) == 2 else "not is_abroad" } as is_chinese,
+                {"not ifnull(is_abroad, 0)" if len(this) == 2 else "not ifnull(is_abroad, 1)"} as is_chinese,
                 if(phone is null, 0, 1) as has_phone,
                 if(email is null, 0, 1) as has_email,
                 ifnull(title, title_en) as title,
@@ -169,7 +169,7 @@ class GetData(MainGetData):
         from tmp_{thisEn} as a
         join {table} as b
         on a.{thisEn}_id = b.{idCol} and not b.is_deleted and not b.is_new
-        {"where not ifnull(is_abroad, 0)" if len(this) == 2 else "" };
+        {"where not ifnull(is_abroad, 0)" if len(this) == 2 else "where ifnull(is_abroad, 1)" };
         '''
 
     def stdData (self, data):

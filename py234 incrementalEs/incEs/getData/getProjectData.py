@@ -6,7 +6,13 @@ from .baseGetData import BaseGetData, rmUnseen, groupConcat
 def getActions (data, publish, index):
     actions = []
 
-    p2s = {publish['gid'][i] : publish['scholar_id'][i] for i in range(len(publish))}
+    p2s = {
+        publish['gid'][i] : {
+            'scholar_id' : publish['scholar_id'][i],
+            'names' : publish['names'][i]
+        }
+        for i in range(len(publish))
+    }
 
     for i in range(len(data)):
         if data['gid'][i] not in p2s: continue
@@ -14,14 +20,18 @@ def getActions (data, publish, index):
             '_index':index,#index
             '_id' : data['gid'][i],
             '_source':
-           {
+            {
                 "id" : data['gid'][i],
                 "title" : rmUnseen(data['title'][i]),
                 "discipline" : rmUnseen(data['discipline'][i]),
                 "description" : rmUnseen(data['description'][i]),
-                "scholars" : p2s[data['gid'][i]],
+                "scholars" : p2s[data['gid'][i]]['scholar_id'],
                 "start_year" : data['start_year'][i],
-                "end_year" : data['end_year'][i]
+                "end_year" : data['end_year'][i],
+                "names" : [
+                    {"name" : x}
+                    for x in p2s[data['gid'][i]]['names']
+                ]
             }
         }
         actions.append(action)
@@ -62,7 +72,32 @@ class GetData(BaseGetData):
         );
         '''
 
+        ### 既有id又有name
         self.sSelectPublish = f'''
+        select d.gid as gid, 
+               cast(d.author_id as char) as scholar_id, 
+               ifnull(d.name, ifnull(e.display_name, d.original_author)) as names 
+        from 
+        (
+            select b.*, c.display_name as name from
+            (
+                select t.gid, a.author_id, ifnull(a.original_author, a.original_author_en) as original_author
+                from tmp_{thisEn} as t
+                left join project_authors as a
+                on t.gid = a.project_id
+                and not a.is_deleted
+            ) as b
+            left join authors as c
+            on b.author_id = c.golaxy_author_id and not c.is_deleted and not ifnull(c.is_abroad, 0)
+        ) as d
+        left join authors_en as e
+        on d.author_id = e.golaxy_author_id and not e.is_deleted and ifnull(e.is_abroad, 1)
+        order by d.gid;
+        '''
+        
+        
+        ### 原发表
+        f'''
         select gid, cast(author_id as char) as scholar_id
         from tmp_{thisEn} as a
         left join project_authors as b
@@ -101,4 +136,4 @@ class GetData(BaseGetData):
         db.sql(self.sRmTmp, ifCommit=1, ifRetry=0)
         db.close()
 
-        return data, groupConcat(publish, 'gid', ';')
+        return data, groupConcat(publish, 'gid', ';', {'names' : None})

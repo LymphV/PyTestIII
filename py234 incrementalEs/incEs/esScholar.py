@@ -27,11 +27,12 @@ class EsScholar(EsMainBase):
     __version__ = 20210630
     __author__ = 'LymphV@163.com'
 
-    def __init__ (self, this, thisEn, table, idCol, index, indexHl, TmpScholars):
+    def __init__ (self, this, thisEn, table, idCol, index, indexHl, TmpScholars, isAbroad=False):
         EsMainBase.__init__(self, this, thisEn, table, idCol, index, indexHl, TmpScholars)
         self.getData = GetData(this, thisEn, table, idCol, nIdSep)
         self.getActions = getActions
         self.getHighLightActions = getHighLightActions
         self.sizeBulk = 20
+        self.isAbroad = isAbroad
 
 esScholar = EsScholar(this, thisEn, table, idCol, index, indexHl, TmpScholars)

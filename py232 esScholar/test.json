@@ -82,12 +82,7 @@
         "properties" :
         {
             "id" : {"type" : "keyword", "store" : true},
-            "title" : {"type" : "text"},
-            "abstract" : {"type" : "text"},
-            "keywords" : {"type" : "text"},
-            "scholars" : {"type" : "text"},
-            "year" : {"type" : "integer"},
-            "names" : {"type" : "nested", "properties":{"name" : {"type" : "text", "analyzer" : "name_analyzer"}}}
+            "names" : {"type" : "nested","properties":{"name" : {"type" : "text", "analyzer" : "name_analyzer"}}}
         }
     }
 }

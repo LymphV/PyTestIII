@@ -19,7 +19,7 @@ class TmpScholars (TmpTemplet):
     '''
     生成时间窗口内所有更新的学者id的临时表
     '''
-    def __init__ (this, db, table=table, idCol=idCol, tableTmpTemplet=tableTmp):
+    def __init__ (this, db, table=table, idCol=idCol, tableTmpTemplet=tableTmp, isAbroad=False):
         TmpTemplet.__init__(this)
         this.db = db
         this.table = table
@@ -28,6 +28,7 @@ class TmpScholars (TmpTemplet):
         this.tmpPatents = None
         this.tmpPapers = None
         this.tmpProjects = None
+        this.isAbroad = isAbroad
 
     def start (this, tLast, tNow):
         this.setTableTmp(tLast, tNow)
@@ -48,16 +49,16 @@ class TmpScholars (TmpTemplet):
 
         ### 新增或更新基本信息的学者，不含删除学者
         sInsert = [
-            getSqlInsert(this.table, this.idCol, containDel=0, hasIsNew=1),
+            getSqlInsert(this.table, this.idCol, containDel=0, hasIsNew=1, isAbroad=this.isAbroad),
         ]
 
         sInserts = [
             getSqlPublishInsert('paper_author_affiliations', 'author_id', 'paper_id',
-                tableTmpPapers, this.table, this.idCol, hasIsNew=1),
+                tableTmpPapers, this.table, this.idCol, hasIsNew=1, isAbroad=this.isAbroad),
             getSqlPublishInsert('project_authors', 'author_id', 'project_id',
-                tableTmpProjects, this.table, this.idCol, hasIsNew=1),
+                tableTmpProjects, this.table, this.idCol, hasIsNew=1, isAbroad=this.isAbroad),
             getSqlPublishInsert('patent_authors', 'author_id', 'patent_id',
-                tableTmpPatents, this.table, this.idCol, hasIsNew=1),
+                tableTmpPatents, this.table, this.idCol, hasIsNew=1, isAbroad=this.isAbroad),
         ]
 
         tLast = stdSqlData(tLast)

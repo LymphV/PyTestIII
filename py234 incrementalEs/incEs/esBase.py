@@ -41,7 +41,7 @@ class EsBase:
     并实现成员函数
         self._es(db, es, tableTmp, now, tLast, tNow)
     '''
-    __version__ = 20210922
+    __version__ = 20220613
     __author__ = 'LymphV@163.com'
 
     def __init__ (self, this, thisEn, table, idCol, index, Tmp):
@@ -56,6 +56,7 @@ class EsBase:
         self.getActions = None
         self.sizeBulk = None
         self.hasIsNew = False
+        self.isAbroad = None
 
     def ourError (self, error, errorType = ''):
         path = os.path.join(__path__, f'error{vGlobals.timeManagerType}/{self.thisEn}')
@@ -71,34 +72,35 @@ class EsBase:
 
         frmt(f'获取全部{self.this}更新列表', end='\r')
         tmp = ViewAll(
-            db, self.thisEn, self.table, self.idCol, self.hasIsNew
+            db, self.thisEn, self.table, self.idCol, self.hasIsNew, self.isAbroad
         ) if tLast is None and tNow is None else self.Tmp(db)
+        
+        try:
+            tmp.start(tLast, tNow)
+            tableTmp = tmp.tableTmp
 
-        tmp.start(tLast, tNow)
-        tableTmp = tmp.tableTmp
+            sizeBulk = self.sizeBulk
+            now = 0
+            nThis = len(tmp)
+            db.close()
 
-        sizeBulk = self.sizeBulk
-        now = 0
-        nThis = len(tmp)
-        db.close()
+            frmt(f'获取全部{self.this}更新列表({nThis})', end='\r')
+            self.ourLog(nThis, f'获取全部{self.this}更新列表')
+            if nThis:
+                lastId = -1
+                with trange(now, nThis, sizeBulk) as tr:
+                    for i in tr:
+                        frmt(self.this, f'{i}/{nThis}', tqdm=tr)
+                        now = i ### 在测试时为方便断点续传
 
-        frmt(f'获取全部{self.this}更新列表({nThis})', end='\r')
-        self.ourLog(nThis, f'获取全部{self.this}更新列表')
-        if nThis:
-            lastId = -1
-            with trange(now, nThis, sizeBulk) as tr:
-                for i in tr:
-                    frmt(self.this, f'{i}/{nThis}', tqdm=tr)
-                    now = i ### 在测试时为方便断点续传
-
-                    lastId = self._es(db, es, tableTmp, now, tLast, tNow, lastId)
-            self.ourLog('-' * 20)
-        deleteIndexRows(db, es, self.table, self.idCol, tLast=tLast, tNow=tNow,
-            index=self.indexes, this=self.this, hasIsNew=self.hasIsNew)
-
-        tmp.close()
-        es.close()
-        db.close()
+                        lastId = self._es(db, es, tableTmp, now, tLast, tNow, lastId)
+                self.ourLog('-' * 20)
+            deleteIndexRows(db, es, self.table, self.idCol, tLast=tLast, tNow=tNow,
+                index=self.indexes, this=self.this, hasIsNew=self.hasIsNew)
+        finally:
+            tmp.close()
+            es.close()
+            db.close()
 
     def _es (self, db, es, tableTmp, now, tLast, tNow, lastId):
         data = self.getData(db, tableTmp, now, self.sizeBulk, lastId)
@@ -126,12 +128,13 @@ class EsMainBase(EsBase):
     __version__ = 20210727
     __author__ = 'LymphV@163.com'
 
-    def __init__ (self, this, thisEn, table, idCol, index, indexHl, Tmp):
+    def __init__ (self, this, thisEn, table, idCol, index, indexHl, Tmp, isAbroad=None):
         EsBase.__init__(self, this, thisEn, table, idCol, index, Tmp)
         self.indexHl = indexHl
         self.indexes = [index, indexHl]
         self.getHighLightActions = None
         self.hasIsNew = True
+        self.isAbroad = isAbroad
 
     def miniInsert (self, db, es, data, info):
         '''
@@ -158,7 +161,7 @@ class EsMainBase(EsBase):
 
     def _es (self, db, es, tableTmp, now, tLast, tNow, lastId):
         sizeBulk = self.sizeBulk
-        data, info = self.getData.getRangeData(db, tableTmp, now, sizeBulk)
+        data, info = self.getData.getRangeData(db, tableTmp, now, sizeBulk, lastId)
 
         actions = self.getHighLightActions(data, info, self.indexHl)
         rst = max(int(x['_id']) for x in actions)

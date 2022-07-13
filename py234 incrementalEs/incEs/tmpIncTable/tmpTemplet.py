@@ -18,20 +18,28 @@ drop table if exists %s;
 '''
 
 
-def getSqlInsert (table, idCol, containDel=1, hasIsNew=0, distinct=0, tableCheck=None, idColCheck=None):
+def getSqlInsert (table, idCol, containDel=1, hasIsNew=0, distinct=0, tableCheck=None, idColCheck=None, isAbroad=None):
+    if isAbroad is None: sIsAbroad = ''
+    elif isAbroad: sIsAbroad = 'and ifnull(b.is_abroad, 1)'
+    else: sIsAbroad = 'and not ifnull(b.is_abroad, 0)'
+    
+    sIsNew = 'and not b.is_new' if hasIsNew else ''
+
     if tableCheck is None or idColCheck is None:
         return f'''
         replace into %s
         (
-        	select {'distinct' if distinct else ''} {idCol} as id from {table}
+        	select {'distinct' if distinct else ''} {idCol} as id from {table} as b
             where %s <= ifnull (updated_at, created_at)
                 and ifnull (updated_at, created_at) < %s
                 {'' if containDel else 'and not is_deleted'}
-                {'and not is_new' if hasIsNew else ''}
+                {sIsNew}
+                {sIsAbroad}
         );
         '''
 
     ### 关系表里被删除的id如果id本身没有被删除应该被视为更新
+    ### tableCheck是检查id本身的表，idColCheck是检查id本身是否删除的标识列
     ### 此时containDel字段无效
     return f'''
     replace into %s
@@ -46,26 +54,31 @@ def getSqlInsert (table, idCol, containDel=1, hasIsNew=0, distinct=0, tableCheck
         join {tableCheck} as b
         on a.id = b.{idColCheck}
         and not b.is_deleted
-        {'and not b.is_new' if hasIsNew else ''}
+        {sIsNew}
+        {sIsAbroad}
     );
     '''
 
 def getSqlPublishInsert (tableRelation, idColRelation, pidColRelation,
-        tableTmpPublish, table, idCol, hasIsNew=0):
+        tableTmpPublish, table, idCol, hasIsNew=0, isAbroad=None):
     '''
     插入成果更新的学者/企业id
 
     Parameters
     ----------
-    tableTmp : 学者/企业id临时表
     tableRelation : 学者/企业成果关系表
     idColRelation : 学者/企业成果关系表学者/企业id列
     pidColRelation : 学者/企业成果关系表成果id列
-    tableTmpPublish : 成果id临时表
+    tableTmpPublish : 更新的成果的id临时表
     table : 学者/企业表
     idCol : 学者/企业表id列
     hasIsNew : 是否含有is_new字段，is_new=1不进行索引
+    isAbroad : 对学者，是否国外学者，为None表示无此字段
     '''
+    if isAbroad is None: sIsAbroad = ''
+    elif isAbroad: sIsAbroad = 'and ifnull(d.is_abroad, 1)'
+    else: sIsAbroad = 'and not ifnull(d.is_abroad, 0)'
+
     return f'''
     replace into %s
     (
@@ -79,8 +92,9 @@ def getSqlPublishInsert (tableRelation, idColRelation, pidColRelation,
         ) as c
         join {table} as d
         on c.id = d.{idCol}
-        where !ifnull(d.is_deleted, 0)
-        {'and !ifnull(d.is_new, 0)' if hasIsNew else ''}
+        where not ifnull(d.is_deleted, 0)
+        {'and not ifnull(d.is_new, 0)' if hasIsNew else ''}
+        {sIsAbroad}
     );
     '''
 

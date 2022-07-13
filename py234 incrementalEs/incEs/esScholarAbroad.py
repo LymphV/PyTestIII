@@ -20,4 +20,4 @@ index = f'landinn_{thisEn}'
 indexHl = f'landinn_{thisEn}_highlight'
 
 
-esScholar = EsScholar(this, thisEn, table, idCol, index, indexHl, TmpScholars)
+esScholar = EsScholar(this, thisEn, table, idCol, index, indexHl, TmpScholars, True)

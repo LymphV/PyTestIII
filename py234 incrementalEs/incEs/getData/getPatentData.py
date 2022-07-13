@@ -6,25 +6,40 @@ from .baseGetData import BaseGetData, rmUnseen, groupConcat
 def getActions (data, publish, index):
     actions = []
 
-    p2s = {publish['gid'][i] : publish['scholar_id'][i] for i in range(len(publish))}
-    p2e = {publish['gid'][i] : publish['enterprise_id'][i] for i in range(len(publish))}
+    p2se = {
+        publish['gid'][i] : {
+            'scholar_id' : publish['scholar_id'][i],
+            'names' : publish['names'][i],
+            'enterprise_id' : publish['enterprise_id'][i],
+            'enterprise_names' : publish['enterprise_names'][i]
+        }
+        for i in range(len(publish))
+    }
 
     for i in range(len(data)):
-        if data['gid'][i] not in p2s: continue
+        if data['gid'][i] not in p2se: continue
         action={'_op_type':'index',#操作 index update create delete
             '_index':index,#index
             '_id' : data['gid'][i],
             '_source':
-           {
+            {
                 "id" : data['gid'][i],
                 "title" : rmUnseen(data['title'][i], None),
                 "signory" : rmUnseen(data['signory'][i], None),
                 "summary" : rmUnseen(data['summary'][i], None),
-                "scholars" : p2s[data['gid'][i]],
-                "enterprises" : p2e[data['gid'][i]],
+                "scholars" : p2se[data['gid'][i]]['scholar_id'],
+                "enterprises" : p2se[data['gid'][i]]['enterprise_id'],
                 "applicant_date" : None if data['applicant_date'][i] is pd.NaT else data['applicant_date'][i],
                 "grant_date" : None if data['grant_date'][i] is pd.NaT else data['grant_date'][i],
-                "publication_date" : None if data['publication_date'][i] is pd.NaT else data['publication_date'][i]
+                "publication_date" : None if data['publication_date'][i] is pd.NaT else data['publication_date'][i],
+                "names" : [
+                    {"name" : x}
+                    for x in p2se[data['gid'][i]]['names']
+                ],
+                "enterprise_names" : [
+                    {"enterprise_name" : x}
+                    for x in p2se[data['gid'][i]]['enterprise_names']
+                ]
             }
         }
         actions.append(action)
@@ -59,8 +74,34 @@ class GetData(BaseGetData):
             on a.{idCol} = b.id and not a.is_deleted
         );
         '''
-
+        ### id和名
         self.sSelectPublishScholar = f'''
+        select d.gid as gid, 
+               cast(d.author_id as char) as scholar_id, 
+               ifnull(d.name, ifnull(e.display_name, d.original_author)) as names,
+               null as enterprise_id, null as enterprise_names
+        from
+        (
+            select b.*, c.display_name as name
+            from
+            (
+                select t.gid, a.author_id, ifnull(a.original_author, a.original_author_en) as original_author
+                from tmp_{thisEn} as t
+                left join patent_authors as a
+                on t.gid = a.patent_id 
+                and not a.is_deleted
+            ) as b
+            left join authors as c
+            on b.author_id = c.golaxy_author_id and not c.is_deleted and not ifnull(c.is_abroad, 0)
+        ) as d
+        left join authors_en as e
+        on d.author_id = e.golaxy_author_id and not e.is_deleted and ifnull(e.is_abroad, 1)
+        order by d.gid;
+        '''
+        
+        
+        ### 旧发表学者
+        f'''
         select gid, cast(author_id as char) as scholar_id, null as enterprise_id
         from tmp_{thisEn} as a
         left join patent_authors as b
@@ -68,7 +109,29 @@ class GetData(BaseGetData):
         and not b.is_deleted;
         '''
 
+        ### id和名
         self.sSelectPublishEnterprise = f'''
+        select b.gid as gid, 
+               null as scholar_id, null as names,
+               cast(b.applicant_id as char) as enterprise_id, 
+               ifnull(c.display_name, b.original_applicant) as enterprise_names
+        from
+        (
+            select t.gid, a.applicant_id, ifnull(a.original_applicant, a.original_applicant_en) as original_applicant
+            from tmp_{thisEn} as t
+            left join patent_applicants as a
+            on t.gid = a.patent_id
+            and not a.is_deleted
+        ) as b
+        left join affiliations as c
+        on b.applicant_id = c.affiliation_id and not c.is_deleted
+        order by b.gid; 
+
+        '''
+        
+
+        ### 旧发表机构
+        f'''
         select gid, null as scholar_id, cast(applicant_id as char) as enterprise_id
         from tmp_{thisEn} as c
         left join patent_applicants as d
@@ -106,4 +169,4 @@ class GetData(BaseGetData):
         db.close()
 
         publish = ps.append(pe, ignore_index=True)
-        return data, groupConcat(publish, 'gid', ';')
+        return data, groupConcat(publish, 'gid', ';', {'names' : None, 'enterprise_names' : None})

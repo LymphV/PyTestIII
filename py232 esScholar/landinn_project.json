@@ -60,6 +60,16 @@
                         "light_english_stemmer", 
                         "asciifolding" 
                     ]
+                },
+                "name_analyzer":
+                {
+                    "char_filter": [ "html_strip" ],
+                    "tokenizer":  "standard",
+                    "filter": 
+                    [
+                        "lowercase",
+                        "asciifolding" 
+                    ]
                 }
             }
         }
@@ -77,7 +87,8 @@
             "discipline" : {"type" : "text"},
             "scholars" : {"type" : "text"},
             "start_year" : {"type" : "integer"},
-            "end_year" : {"type" : "integer"}
+            "end_year" : {"type" : "integer"},
+            "names" : {"type" : "nested", "properties":{"name" : {"type" : "text", "analyzer" : "name_analyzer"}}}
         }
     }
 }

@@ -12,7 +12,7 @@ class ViewAll:
     __version__ = 20210630
     __author__ = 'LymphV@163.com'
 
-    def __init__ (this, db, thisEn, table, idCol, hasIsNew=False):
+    def __init__ (this, db, thisEn, table, idCol, hasIsNew=False, isAbroad=None):
         '''
         生成所有的有效的某种id的视图
 
@@ -28,11 +28,16 @@ class ViewAll:
         this.db = db
         this.tableTmp = f'`{dbTmp}`.`tmp_lymphv_{thisEn}`'
 
+        if isAbroad is None: sIsAbroad = ''
+        elif isAbroad: sIsAbroad = 'and ifnull(is_abroad, 1)'
+        else: sIsAbroad = 'and not ifnull(is_abroad, 0)'
+
         this.sCreate = f'''
             create or replace view `{dbTmp}`.`tmp_lymphv_{thisEn}`
             as select {idCol} as id from {table}
             where not ifnull(is_deleted,0)
-            {'and not ifnull(is_new,0)' if hasIsNew else ''};
+            {'and not ifnull(is_new,0)' if hasIsNew else ''}
+            {sIsAbroad};
         '''
 
     def __len__ (this):
