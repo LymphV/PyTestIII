@@ -1,0 +1,5 @@
+schema = 'cnd_LymphV'
+tableDone = f'{schema}.doneName'
+tableError = f'{schema}.errorName'
+tableRule = f'{schema}.rule'
+tableSign = f'{schema}.sign'
